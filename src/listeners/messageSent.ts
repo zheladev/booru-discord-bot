@@ -1,5 +1,6 @@
 import { Attachment, Client, Collection, Message } from "discord.js";
 import { parseDiscordMessage, parseMessageAttachments } from "../services/message";
+import { postAttachment } from "../services/booru";
 
 export default (client: Client): void => {
     client.on("messageCreate", async (message: Message) => {
@@ -9,5 +10,5 @@ export default (client: Client): void => {
 
 const handleMessage = async (client: Client, message: Message) => {
     const attachments = parseMessageAttachments(message);
-    processAttachments(attachments)
+    attachments.map(a => postAttachment(a));
 }
