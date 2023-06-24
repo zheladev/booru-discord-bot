@@ -51,15 +51,19 @@ const postAttachment = async (taggedFile: IBooruUploadCandidate, postUrl: string
             status = uploadInfo.data.status
             console.log(status)
         }
-        console.log(`Posting ${taggedFile.name} from upload data with:`)
-        console.log(ids)
-        const postRes = await axios.post(`${postUrl}/posts.json`, {
-            upload_media_asset_id: ids.uploadMediaAssetId,
-            media_asset_id: ids.mediaAssetId,
-            upload_id: ids.uploadId,
-            tag_string: taggedFile.tags,
-            rating: taggedFile.rating,
-        })
+        if (ids.mediaAssetId !== -1) {
+            console.log(`Posting ${taggedFile.name} from upload data with:`)
+            console.log(ids)
+            const postRes = await axios.post(`${postUrl}/posts.json`, {
+                upload_media_asset_id: ids.uploadMediaAssetId,
+                media_asset_id: ids.mediaAssetId,
+                upload_id: ids.uploadId,
+                tag_string: taggedFile.tags,
+                rating: taggedFile.rating,
+            })
+        } else {
+            console.log("Error posting.")
+        }
         console.log("posted!")
     }
 }
