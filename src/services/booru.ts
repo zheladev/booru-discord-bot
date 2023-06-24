@@ -73,7 +73,11 @@ const getHighestSimilarityImage = async (attachment: IAttachment): Promise<IBoor
     if (attachment.contentType.includes("image") && attachment.size < 1e+7) {
         const iqdbSearchRes = await search(attachment.url);
         const highestSimilarityRes = iqdbSearchRes.results.find(res => res.match === "best")
-
+        const tags = iqdbSearchRes.results.filter(res => res.similarityPercentage > 80)
+            .reduce(
+                (acc, curr) => `${acc} ` + (curr.thumbnail.tags ? curr.thumbnail.tags.join(" ") : ""),
+                ""
+            )
         if (highestSimilarityRes) {
             // TODO: parse urls and extract file from them (danbooru.com/post/1234 -> cdn.jpg link)
             const bestUrl = attachment.url;
