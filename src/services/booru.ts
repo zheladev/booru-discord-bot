@@ -37,7 +37,8 @@ const postAttachment = async (taggedFile: IBooruUploadCandidate, postUrl: string
             }
         })
 
-        while (ids.mediaAssetId == -1) {
+        var status = ""
+        while (ids.mediaAssetId == -1 && status !== 'error') {
             await new Promise(resolve => setTimeout(resolve, 3000));
             console.log(`Retrieving  ${taggedFile.name} upload data.`)
             const uploadInfo = await axios.get(`${postUrl}/uploads/${uploadRes.data.id}.json`)
@@ -47,6 +48,8 @@ const postAttachment = async (taggedFile: IBooruUploadCandidate, postUrl: string
                 ids.uploadId = uploadInfo.data.id
                 ids.uploadMediaAssetId = uploadInfo.data.upload_media_assets[0].id
             }
+            status = uploadInfo.data.status
+            console.log(status)
         }
         console.log(`Posting ${taggedFile.name} from upload data with:`)
         console.log(ids)
