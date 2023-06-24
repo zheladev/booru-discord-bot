@@ -5,8 +5,6 @@ import { search } from '@l2studio/iqdb-api'
 import { IBooruUploadCandidate } from "../interfaces/IBooruUploadCandidate";
 
 
-// TODO: dont upload files over iqdb size limit
-
 export const findTagsAndPostAttachment = async (attachment: IAttachment) => {
     const username = process.env.BOORU_USERNAME;
     const apiKey = process.env.BOORU_TOKEN;
@@ -15,17 +13,22 @@ export const findTagsAndPostAttachment = async (attachment: IAttachment) => {
 
     // const uploadInfo = await axios.get(`${postUrl}/posts/1.json`)
     // console.log(uploadInfo.data)
-    const highestSimilarityTaggedImage = await getHighestSimilarityImage(attachment);
     try {
+        const highestSimilarityTaggedImage = await getHighestSimilarityImage(attachment);
         await postAttachment(highestSimilarityTaggedImage, postUrl);
     } catch (e) {
-        console.log(e.response.data)
+        console.log(e)
     }
 
 
 }
 
 const postAttachment = async (taggedFile: IBooruUploadCandidate, postUrl: string) => {
+    const ids = {
+        uploadId: -1,
+        uploadMediaAssetId: -1,
+        mediaAssetId: -1
+    }
     if (taggedFile) {
         console.log(`Uploading ${taggedFile.name} to danbooru.`)
         const uploadRes = await axios.post(`${postUrl}/uploads.json`, {
@@ -34,20 +37,23 @@ const postAttachment = async (taggedFile: IBooruUploadCandidate, postUrl: string
             }
         })
 
-        let mediaAssetId = null;
-        while (!mediaAssetId) {
+        while (ids.mediaAssetId == -1) {
             await new Promise(resolve => setTimeout(resolve, 3000));
             console.log(`Retrieving  ${taggedFile.name} upload data.`)
             const uploadInfo = await axios.get(`${postUrl}/uploads/${uploadRes.data.id}.json`)
             if (uploadInfo.data.status === "completed") {
-                console.log(uploadInfo.data)
-                mediaAssetId = uploadInfo.data.upload_media_assets[0].media_asset_id
+
+                ids.mediaAssetId = uploadInfo.data.upload_media_assets[0].media_asset_id
+                ids.uploadId = uploadInfo.data.id
+                ids.uploadMediaAssetId = uploadInfo.data.upload_media_assets[0].id
             }
         }
-        console.log(`Posting ${taggedFile.name} from upload data with ${mediaAssetId} media asset id.`)
-        console.log(taggedFile)
+        console.log(`Posting ${taggedFile.name} from upload data with:`)
+        console.log(ids)
         const postRes = await axios.post(`${postUrl}/posts.json`, {
-            upload_media_asset_id: mediaAssetId,
+            upload_media_asset_id: ids.uploadMediaAssetId,
+            media_asset_id: ids.mediaAssetId,
+            upload_id: ids.uploadId,
             tag_string: taggedFile.tags,
             rating: taggedFile.rating,
         })
@@ -61,7 +67,7 @@ const getHighestSimilarityImage = async (attachment: IAttachment): Promise<IBoor
     //const highestSimilarityRes = iqdbSearchRes.results.reduce((p, c) => p.similarity > c.similarity ? p : c)
     const highestSimilarityRes = iqdbSearchRes.results.find(res => res.match === "best")
     var uploadCandidate: IBooruUploadCandidate;
-    if (highestSimilarityRes) {
+    if (highestSimilarityRes && attachment.contentType.includes("image") && attachment.size < 1e+7) {
         //const bestUrl = attachment.width > highestSimilarityRes.width && attachment.height > highestSimilarityRes.height ? attachment.url : highestSimilarityRes.sources[0].fixedHref
         // TODO: parse urls and extract file from them (danbooru.com/post/1234 -> cdn.jpg link)
         const bestUrl = attachment.url;
@@ -76,7 +82,7 @@ const getHighestSimilarityImage = async (attachment: IAttachment): Promise<IBoor
         uploadCandidate = {
             url: attachment.url,
             tags: "",
-            rating: "E",
+            rating: "e",
             source: attachment.url,
             name: attachment.name
         }

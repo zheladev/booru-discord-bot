@@ -6,4 +6,5 @@ export interface IAttachment {
     contentType: string;
     height: number;
     width: number;
+    size: number;
 }
