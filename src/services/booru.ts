@@ -63,30 +63,30 @@ const postAttachment = async (taggedFile: IBooruUploadCandidate, postUrl: string
 
 
 const getHighestSimilarityImage = async (attachment: IAttachment): Promise<IBooruUploadCandidate> => {
-    const iqdbSearchRes = await search(attachment.url);
-    //const highestSimilarityRes = iqdbSearchRes.results.reduce((p, c) => p.similarity > c.similarity ? p : c)
-    const highestSimilarityRes = iqdbSearchRes.results.find(res => res.match === "best")
-    var uploadCandidate: IBooruUploadCandidate;
-    if (highestSimilarityRes && attachment.contentType.includes("image") && attachment.size < 1e+7) {
-        //const bestUrl = attachment.width > highestSimilarityRes.width && attachment.height > highestSimilarityRes.height ? attachment.url : highestSimilarityRes.sources[0].fixedHref
-        // TODO: parse urls and extract file from them (danbooru.com/post/1234 -> cdn.jpg link)
-        const bestUrl = attachment.url;
-        uploadCandidate = {
-            url: bestUrl,
-            tags: highestSimilarityRes.thumbnail.tags?.join(" "),
-            rating: mapIQDBRatingToBooruRatingTag(highestSimilarityRes.type),
-            source: bestUrl,
-            name: attachment.name
-        }
-    } else {
-        uploadCandidate = {
-            url: attachment.url,
-            tags: "",
-            rating: "e",
-            source: attachment.url,
-            name: attachment.name
+    var uploadCandidate: IBooruUploadCandidate = {
+        url: attachment.url,
+        tags: "",
+        rating: "e",
+        source: attachment.url,
+        name: attachment.name
+    };
+    if (attachment.contentType.includes("image") && attachment.size < 1e+7) {
+        const iqdbSearchRes = await search(attachment.url);
+        const highestSimilarityRes = iqdbSearchRes.results.find(res => res.match === "best")
+
+        if (highestSimilarityRes) {
+            // TODO: parse urls and extract file from them (danbooru.com/post/1234 -> cdn.jpg link)
+            const bestUrl = attachment.url;
+            uploadCandidate = {
+                url: bestUrl,
+                tags: highestSimilarityRes.thumbnail.tags?.join(" "),
+                rating: mapIQDBRatingToBooruRatingTag(highestSimilarityRes.type),
+                source: bestUrl,
+                name: attachment.name
+            }
         }
     }
+
 
     return uploadCandidate;
 }
