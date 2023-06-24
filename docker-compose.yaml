@@ -1,0 +1,7 @@
+services:
+  booru-discord-bot:
+    container_name: booru-discord-bot
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: node dist/index.js

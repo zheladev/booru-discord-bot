@@ -4,6 +4,7 @@
     "target": "es2017",
     "outDir": "./dist",
     "baseUrl": "./src",
+    "skipLibCheck": true,
     "module": "commonjs",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
